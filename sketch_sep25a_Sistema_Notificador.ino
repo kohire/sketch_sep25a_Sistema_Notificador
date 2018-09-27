@@ -26,10 +26,10 @@ void setup() {
 
   pinMode(redOpen, OUTPUT); // Los led estarán en modo salida.
   pinMode(greenClose, OUTPUT);
-  pinMode(reedSw, INPUT); //Será input ya que necesitamos controlar lo que entre.
-  //Serial.begin(9600);
+  pinMode(reedSw, INPUT_PULLUP); //Será input ya que necesitamos controlar lo que entre.
+  pinMode(buzzer, OUTPUT);
+  
 }
-
 
 void loop() {
   // De forma cíclica, el arduino deberá estar dormido, y la razón es que cuando esté en modo LOW
@@ -43,25 +43,28 @@ void loop() {
   // Usando Low-Power, no debe llevar delay, Serial. Solo lo escencial.
 
   attachInterrupt(0, openDoor, LOW); //Digital pin 2. LOW - HIGH
-  LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, HOD_OFF);
+  LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
   detachInterrupt(0);
+  delay(100);
   // En esta parte se pueden hacer comentarios u otras cosas.
   closeDoor();
 }
 
 void openDoor()
 {
-    digitalWrite(redOpen, HIGH);
-    digitalWrite(greenClose, LOW);
-    //Recorremos el arreglo para que el buzzer haga diferentes sonidos.
-   tone(buzzer, 150);
-  }
+  digitalWrite(redOpen, HIGH);
+  digitalWrite(greenClose, LOW);
+  digitalWrite(buzzer, HIGH);
+  //Recorremos el arreglo para que el buzzer haga diferentes sonidos.
+  
 }
+
+
 void closeDoor()
 {
-   digitalWrite(redOpen, LOW);
-   digitalWrite(greenClose, HIGH);
-   noTone(buzzer); 
+  digitalWrite(redOpen, LOW);
+  digitalWrite(greenClose, HIGH);
+  digitalWrite(buzzer, LOW);
 }
 
 
