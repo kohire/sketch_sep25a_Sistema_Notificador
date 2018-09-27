@@ -9,7 +9,6 @@
     - CUANDO SE CIERRE LA PUERTA, NO DEBE SONAR LA ALARMA Y EL CONSUMO
       DE ENERGÍA DEEBE SER EL MISMO.
 */
-
 #include <LowPower.h> //La librería low-power nos ayudará a reducir al mínimo el consumo del circuito, así que la importaremos.
 
 //Definimos que pines vamos a utilizar para los leds, el buzzer y el reedSw.
@@ -20,51 +19,57 @@
 
 //Defino enteros para el sonido del buzzer.
 const int tonos[] = {261, 277, 294, 311, 330, 349};
-const int countTonos = 10;
+const int countTonos = 6;
+
 
 void setup() {
 
   pinMode(redOpen, OUTPUT); // Los led estarán en modo salida.
   pinMode(greenClose, OUTPUT);
   pinMode(reedSw, INPUT_PULLUP); //Será input ya que necesitamos controlar lo que entre.
-  pinMode(buzzer, OUTPUT);
-  
+  //Serial.begin(9600);
 }
 
 void loop() {
-  // De forma cíclica, el arduino deberá estar dormido, y la razón es que cuando esté en modo LOW
-  // necesita tener un consumo de energía mayor ya que también utilizamos una alarma. Como quién dice, se activa.
-  // Si fuese el caso contrario, sería lo mismo invertido.
-
-  // El attachInterrupt funciona de la siguiente manera:
-  // (_pin_,_que quieres que haga_, _parámetro_)
-  // Los parámetros son distintos en el arduino, y en el caso de UNO solamente se utilizan: HIGH, LOW, RISING, FALLING y CHANGE.
-  // Usaremos una forma de parar la interrupción con el detach. Este no devuelve nada.
-  // Usando Low-Power, no debe llevar delay, Serial. Solo lo escencial.
-
-  attachInterrupt(0, openDoor, LOW); //Digital pin 2. LOW - HIGH
+  // Aquí se le notifica al arduino que si está en modo low, deberá encender.
+  // Siempre estará dormido, y esto dependerá de la interrupción.
+  attachInterrupt(0, doNothing, LOW); //Digital pin 2. LOW - HIGH
   LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
-  detachInterrupt(0);
-  delay(100);
-  // En esta parte se pueden hacer comentarios u otras cosas.
-  closeDoor();
+  detachInterrupt(0); // Interrumpimos la interrupción.
+  //Hago un while solamente para saber que siempre estará la puerta abierta solo si está en modo low.
+  while (digitalRead(reedSw) == LOW)
+  {
+    openDoor();
+  }
+  closeDoor(); //Si no está abierta, entonces nunca sonará la alarma.
 }
 
-void openDoor()
+
+void doNothing() {
+  //No recibe ningún parámetro, ya para una interrupción que siempre va a estar verificando
+  //si hay o no algo que lo interrumpa. Lo hice de esta manera, ya que utilizo delay, y una interrupción
+  //no hace uso de ellos.
+}
+
+void openDoor() //Se hace este método para cuando se abra la puerta, suene junto al buzzer.
 {
   digitalWrite(redOpen, HIGH);
   digitalWrite(greenClose, LOW);
-  digitalWrite(buzzer, HIGH);
   //Recorremos el arreglo para que el buzzer haga diferentes sonidos.
-  
+  for (int iTonos = 0; iTonos < countTonos; iTonos++)
+  {
+    tone(buzzer, tonos[iTonos]); //Recorro el arreglo de tonos.
+    delay(100); //Entre cada tono debe esperar 100.
+  }
+
 }
 
-
-void closeDoor()
+void closeDoor() // Apagamos todo e indicamos que la puerta está cerrada.
 {
   digitalWrite(redOpen, LOW);
   digitalWrite(greenClose, HIGH);
-  digitalWrite(buzzer, LOW);
+  noTone(buzzer);
 }
+
 
 
