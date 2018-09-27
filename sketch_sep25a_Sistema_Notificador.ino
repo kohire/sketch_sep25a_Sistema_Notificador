@@ -10,34 +10,58 @@
       DE ENERGÍA DEEBE SER EL MISMO.
 */
 
+#include <LowPower.h> //La librería low-power nos ayudará a reducir al mínimo el consumo del circuito, así que la importaremos.
 
 //Definimos que pines vamos a utilizar para los leds, el buzzer y el reedSw.
 #define redOpen 11
 #define greenClose 13
-#define buzzer 8 
-#define reedSw 4
+#define buzzer 8
+#define reedSw 2 //Controlador del sleep. 
 
+//Defino enteros para el sonido del buzzer.
+const int tonos[] = {261, 277, 294, 311, 330, 349};
+const int countTonos = 10;
 
 void setup() {
-  // Cuando este enciende, le declaramos:
+
   pinMode(redOpen, OUTPUT); // Los led estarán en modo salida.
   pinMode(greenClose, OUTPUT);
   pinMode(reedSw, INPUT); //Será input ya que necesitamos controlar lo que entre.
-  Serial.begin(9600); //La entrada serán de 9600 baudios.
+  //Serial.begin(9600);
 }
 
+
 void loop() {
-  //Pasos a seguir:
- if(digitalRead(reedSw) == HIGH) //Si está en HIGH, los led estarán en su posición original.
- {
-  digitalWrite(redOpen, LOW);
-  digitalWrite(greenClose, HIGH);
-  Serial.println("Tu puerta está cerrada");
- } else //Caso contrario...
- {
-  digitalWrite(redOpen, HIGH);
-  digitalWrite(greenClose, LOW);
-  Serial.println("Tu puerta está abierta");
- }
- delay(1); //Por prueba, el delay estará en 1.
+  // De forma cíclica, el arduino deberá estar dormido, y la razón es que cuando esté en modo LOW
+  // necesita tener un consumo de energía mayor ya que también utilizamos una alarma. Como quién dice, se activa.
+  // Si fuese el caso contrario, sería lo mismo invertido.
+
+  // El attachInterrupt funciona de la siguiente manera:
+  // (_pin_,_que quieres que haga_, _parámetro_)
+  // Los parámetros son distintos en el arduino, y en el caso de UNO solamente se utilizan: HIGH, LOW, RISING, FALLING y CHANGE.
+  // Usaremos una forma de parar la interrupción con el detach. Este no devuelve nada.
+  // Usando Low-Power, no debe llevar delay, Serial. Solo lo escencial.
+
+  attachInterrupt(0, openDoor, LOW); //Digital pin 2. LOW - HIGH
+  LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, HOD_OFF);
+  detachInterrupt(0);
+  // En esta parte se pueden hacer comentarios u otras cosas.
+  closeDoor();
 }
+
+void openDoor()
+{
+    digitalWrite(redOpen, HIGH);
+    digitalWrite(greenClose, LOW);
+    //Recorremos el arreglo para que el buzzer haga diferentes sonidos.
+   tone(buzzer, 150);
+  }
+}
+void closeDoor()
+{
+   digitalWrite(redOpen, LOW);
+   digitalWrite(greenClose, HIGH);
+   noTone(buzzer); 
+}
+
+
